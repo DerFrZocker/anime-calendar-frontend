@@ -1,0 +1,9 @@
+---
+const {title} = Astro.props
+---
+
+<div>
+    <label class="text-md font-bold">{title}</label>
+    <slot/>
+    <label class="text-xs">Drag To Change The Order</label>
+</div>
