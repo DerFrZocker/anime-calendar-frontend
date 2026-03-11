@@ -82,3 +82,13 @@ import OrderedMultiSelectItem from "./OrderedMultiSelectItem.astro";
         </div>
     </div>
 </div>
+
+<script>
+    function rebuild() {
+        let username = document.getElementById('myanimelist-username')?.value;
+
+        document.getElementById('output-url').value = `https://api.anime-calendar.com/v3/ical/myanimelist/${username}`;
+    }
+
+    document.getElementById('myanimelist-username')?.addEventListener("keyup", rebuild);
+</script>
