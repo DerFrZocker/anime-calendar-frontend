@@ -7,3 +7,36 @@ const {title} = Astro.props
     <slot/>
     <label class="text-xs">Drag To Change The Order</label>
 </div>
+
+<script>
+    class OrderedMultiSelectItem extends HTMLElement {
+        connectedCallback() {
+            this.addEventListener('dragstart', (e) => {
+                console.log('Drag started');
+                this.firstElementChild?.classList.add('bg-red-100');
+            });
+            this.addEventListener('dragend', (e) => {
+                console.log('Drag end');
+                console.log(e)
+                this.firstElementChild?.classList.remove('bg-red-100');
+            });
+            this.addEventListener('dragover', (e) => {
+                console.log('Drag Over');
+                console.log(e)
+            });
+            this.addEventListener('dragenter', (e) => {
+                console.log('Drag Enter');
+                console.log(e)
+                if (this.firstElementChild?.classList.contains('bg-green-100')) return;
+                this.firstElementChild?.classList.add('bg-green-100');
+            });
+            this.addEventListener('dragleave', (e) => {
+                console.log('Drag Leave');
+                console.log(e)
+                this.firstElementChild?.classList.remove('bg-green-100');
+            });
+        }
+    }
+
+    customElements.define('ordered-multi-select-item', OrderedMultiSelectItem);
+</script>
