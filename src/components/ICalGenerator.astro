@@ -97,7 +97,14 @@ import OrderedMultiSelectItem from "./OrderedMultiSelectItem.astro";
         document.getElementById('output-url').value = `https://api.anime-calendar.com/v3/ical/myanimelist/${username}?${streamingType}&${titleLanguage}`;
     }
 
-    document.getElementById('myanimelist-username')?.addEventListener("keyup", rebuild);
+    document.getElementById('myanimelist-username')?.addEventListener('keyup', rebuild);
     document.addEventListener('state-change', rebuild);
+    document.getElementById('copy-output-url')?.addEventListener('click', () => {
+        const outputUrl = document.getElementById('output-url') as HTMLInputElement;
+        outputUrl.select();
+        outputUrl.setSelectionRange(0, 99999)
+
+        navigator.clipboard.writeText(outputUrl.value);
+    });
     rebuild();
 </script>
