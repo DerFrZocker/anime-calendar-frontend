@@ -10,16 +10,16 @@ import OrderedMultiSelectItem from "./OrderedMultiSelectItem.astro";
             <input id="myanimelist-username" placeholder="Username" type="text" class="w-full outline-solid mt-2 p-1"/>
         </div>
         <div class="mt-4">
-            <OrderedMultiSelect title="Title Language">
-                <OrderedMultiSelectItem itemName="English"/>
-                <OrderedMultiSelectItem itemName="German"/>
-                <OrderedMultiSelectItem itemName="Original"/>
+            <OrderedMultiSelect selectId="title-language" title="Title Language">
+                <OrderedMultiSelectItem itemId="en" itemName="English"/>
+                <OrderedMultiSelectItem itemId="de" itemName="German" checked={false}/>
+                <OrderedMultiSelectItem itemId="original" itemName="Original" fixed={true}/>
             </OrderedMultiSelect>
         </div>
         <div class="mt-4">
-            <OrderedMultiSelect title="Streaming Type">
-                <OrderedMultiSelectItem itemName="Subtitles (Sub)"/>
-                <OrderedMultiSelectItem itemName="Original (Org)"/>
+            <OrderedMultiSelect selectId="streaming-type" title="Streaming Type">
+                <OrderedMultiSelectItem itemId="sub" itemName="Subtitles (Sub)"/>
+                <OrderedMultiSelectItem itemId="org" itemName="Original (Org)"/>
             </OrderedMultiSelect>
         </div>
         <div class="mt-6">
@@ -85,11 +85,19 @@ import OrderedMultiSelectItem from "./OrderedMultiSelectItem.astro";
 </div>
 
 <script>
-    function rebuild() {
-        let username = document.getElementById('myanimelist-username')?.value;
+    const rebuild = () => {
+        const usernameElement = document.getElementById('myanimelist-username') as HTMLInputElement;
+        const username = usernameElement.value.trim();
+        const titleLanguages = document.getElementById('title-language') as OrderedMultiSelect;
+        const streamingTypes = document.getElementById('streaming-type') as OrderedMultiSelect;
 
-        document.getElementById('output-url').value = `https://api.anime-calendar.com/v3/ical/myanimelist/${username}`;
+        const titleLanguage = 'languagePriorities=' + titleLanguages.items.filter(item => item.itemId !== 'original').filter(item => item.checked).map(item => item.itemId).join('&languagePriorities=');
+        const streamingType = 'streamType=' + streamingTypes.items.filter(item => item.checked).map(item => item.itemId).join('&streamType=');
+
+        document.getElementById('output-url').value = `https://api.anime-calendar.com/v3/ical/myanimelist/${username}?${streamingType}&${titleLanguage}`;
     }
 
     document.getElementById('myanimelist-username')?.addEventListener("keyup", rebuild);
+    document.addEventListener('state-change', rebuild);
+    rebuild();
 </script>

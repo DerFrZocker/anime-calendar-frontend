@@ -1,42 +1,217 @@
 ---
-const {title} = Astro.props
+const {selectId, title} = Astro.props
 ---
 
 <div>
     <label class="text-md font-bold">{title}</label>
-    <slot/>
+    <ordered-multi-select id={selectId}>
+        <slot/>
+    </ordered-multi-select>
     <label class="text-xs">Drag To Change The Order</label>
 </div>
 
 <script>
     class OrderedMultiSelectItem extends HTMLElement {
+        parent: OrderedMultiSelect;
+        index: number;
+        itemId: string;
+        fixed: boolean = false;
+        fixedOffsetTop: number;
+        fixedOffsetHeight: number;
+        fixedOffsetLeft: number;
+        fixedOffsetWidth: number;
+
+        checked = true;
+
+        dragging: boolean = false;
+        initialX = 0;
+        initialY = 0;
+        currentX: number = 0;
+        currentY: number = 0;
+        animationId: number | undefined;
+
+        render = () => {
+            if (!this.dragging) {
+                this.animationId = undefined;
+                return;
+            }
+            this.style.transform = `translate(${this.currentX}px, ${this.currentY}px)`;
+
+            this.parent.resetItemTransformation(this);
+
+            const found = this.parent.findOverlappingItem(this);
+            if (found === undefined) {
+                this.animationId = undefined;
+                return;
+            }
+
+            if (this.index < found) {
+                for (let i = this.index; i < found; i++) {
+                    let item = this.parent.items[i];
+                    let next = this.parent.items[i + 1];
+                    next.style.transform = `translate(${item.fixedOffsetLeft - next.fixedOffsetLeft}px, ${item.fixedOffsetTop - next.fixedOffsetTop}px)`;
+                }
+            } else {
+                for (let i = this.index; i > found; i--) {
+                    let item = this.parent.items[i];
+                    let next = this.parent.items[i - 1];
+                    next.style.transform = `translate(${item.fixedOffsetLeft - next.fixedOffsetLeft}px, ${item.fixedOffsetTop - next.fixedOffsetTop}px)`;
+                }
+            }
+
+            this.animationId = undefined;
+        }
+
+        updateFixedOffsetValues = () => {
+            this.fixedOffsetTop = this.offsetTop;
+            this.fixedOffsetHeight = this.offsetHeight;
+            this.fixedOffsetLeft = this.offsetLeft;
+            this.fixedOffsetWidth = this.offsetWidth;
+        }
+
         connectedCallback() {
-            this.addEventListener('dragstart', (e) => {
-                console.log('Drag started');
-                this.firstElementChild?.classList.add('bg-red-100');
+            this.parent = this.parentElement as OrderedMultiSelect;
+            this.itemId = this.getAttribute("itemId") as string;
+            this.fixed = this.getAttribute("fixed") === "true";
+            this.updateFixedOffsetValues();
+
+            const checkbox = this.querySelector('input[type="checkbox"]') as HTMLInputElement;
+            this.checked = checkbox.checked;
+
+            checkbox.addEventListener('change', (e) => {
+                this.checked = e.target.checked;
+                this.dispatchEvent(new CustomEvent('state-change', {
+                    bubbles: true,
+                    composed: true
+                }));
             });
-            this.addEventListener('dragend', (e) => {
-                console.log('Drag end');
-                console.log(e)
-                this.firstElementChild?.classList.remove('bg-red-100');
-            });
-            this.addEventListener('dragover', (e) => {
-                console.log('Drag Over');
-                console.log(e)
-            });
-            this.addEventListener('dragenter', (e) => {
-                console.log('Drag Enter');
-                console.log(e)
-                if (this.firstElementChild?.classList.contains('bg-green-100')) return;
-                this.firstElementChild?.classList.add('bg-green-100');
-            });
-            this.addEventListener('dragleave', (e) => {
-                console.log('Drag Leave');
-                console.log(e)
-                this.firstElementChild?.classList.remove('bg-green-100');
-            });
+
+            this.addEventListener('pointerdown', (e) => {
+                if (this.fixed) {
+                    return;
+                }
+
+                if ((e.target as HTMLElement).tagName === 'INPUT') {
+                    return;
+                }
+
+                e.preventDefault();
+
+                if (this.dragging) {
+                    return;
+                }
+
+                this.initialX = e.clientX;
+                this.initialY = e.clientY;
+                this.dragging = true;
+
+                this.setPointerCapture(e.pointerId);
+            }, {passive: false});
+            this.addEventListener('pointermove', (e) => {
+                if (this.fixed || !this.dragging) {
+                    return;
+                }
+
+                e.preventDefault();
+
+                this.currentX = e.clientX - this.initialX;
+                this.currentY = e.clientY - this.initialY;
+
+                if (this.animationId) {
+                    return;
+                }
+
+                this.animationId = window.requestAnimationFrame(this.render);
+            }, {passive: false});
+            this.addEventListener('pointerup', (e) => {
+                this.releasePointerCapture(e.pointerId);
+
+                if (this.fixed || !this.dragging) {
+                    return;
+                }
+
+                this.dragging = false;
+
+                e.preventDefault();
+                this.parent.resetItemTransformation();
+
+                const found = this.parent.findOverlappingItem(this);
+                if (found === undefined) {
+                    return;
+                }
+
+                if (this.parent.items.length - 1 == found) {
+                    this.parent.append(this)
+                } else if (this.index < found) {
+                    this.parent.insertBefore(this as HTMLElement, this.parent.items[found + 1]);
+                } else {
+                    this.parent.insertBefore(this as HTMLElement, this.parent.items[found]);
+                }
+
+                this.currentX = 0;
+                this.currentY = 0;
+
+                this.parent.calculateItemIndex();
+
+                this.dispatchEvent(new CustomEvent('state-change', {
+                    bubbles: true,
+                    composed: true
+                }));
+            }, {passive: false});
+        }
+    }
+
+    class OrderedMultiSelect extends HTMLElement {
+        items: OrderedMultiSelectItem[];
+
+        calculateItemIndex = () => {
+            this.items = [];
+            let index = 0;
+            for (const child of this.children) {
+                if (child instanceof OrderedMultiSelectItem) {
+                    child.index = index++;
+                    child.updateFixedOffsetValues();
+                    this.items.push(child);
+                }
+            }
+        }
+
+        resetItemTransformation = (exclude: OrderedMultiSelectItem | undefined = undefined) => {
+            for (const item of this.items) {
+                if (item == exclude) {
+                    continue;
+                }
+                item.style.transform = ``;
+            }
+        }
+
+        findOverlappingItem = (item: OrderedMultiSelectItem) => {
+            let relativeOffsetTop = item.currentY + item.fixedOffsetTop + item.fixedOffsetHeight / 2;
+            let relativeOffsetLeft = item.currentX + item.fixedOffsetLeft + item.fixedOffsetWidth / 2;
+
+            for (const other of this.items) {
+                if (item === other) {
+                    continue;
+                }
+
+                if (other.fixed) {
+                    continue;
+                }
+
+                if (other.fixedOffsetLeft < relativeOffsetLeft && (other.fixedOffsetLeft + other.fixedOffsetWidth) > relativeOffsetLeft
+                    && other.fixedOffsetTop < relativeOffsetTop && (other.fixedOffsetTop + other.fixedOffsetHeight) > relativeOffsetTop) {
+                    return other.index;
+                }
+            }
+
+            return undefined;
+        }
+
+        connectedCallback() {
+            this.calculateItemIndex();
         }
     }
 
     customElements.define('ordered-multi-select-item', OrderedMultiSelectItem);
+    customElements.define('ordered-multi-select', OrderedMultiSelect);
 </script>
