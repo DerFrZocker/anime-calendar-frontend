@@ -1,6 +1,4 @@
 User-agent: *
-Allow: /
-
-Disallow: /legal
-Disallow: /privacy
-Disallow: /terms
+Disallow: /legal.html
+Disallow: /privacy.html
+Disallow: /terms.html
