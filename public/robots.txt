@@ -1,4 +1,7 @@
 User-agent: *
 Disallow: /legal.html
+Disallow: /legal
 Disallow: /privacy.html
+Disallow: /privacy
 Disallow: /terms.html
+Disallow: /terms
