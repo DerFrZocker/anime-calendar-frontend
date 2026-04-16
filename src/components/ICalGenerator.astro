@@ -3,11 +3,11 @@ import OrderedMultiSelect from "./OrderedMultiSelect.astro";
 import OrderedMultiSelectItem from "./OrderedMultiSelectItem.astro";
 ---
 
-<div class="outline-solid p-8">
+<div class="border p-8">
     <form>
         <div>
             <label for="myanimelist-username" class="text-md font-bold">MyAnimeList (Must Be Public)</label>
-            <input id="myanimelist-username" placeholder="Username" type="text" class="w-full outline-solid mt-2 p-1"/>
+            <input id="myanimelist-username" placeholder="Username" type="text" class="w-full outline mt-2 p-1"/>
         </div>
         <div class="mt-4">
             <OrderedMultiSelect selectId="title-language" title="Title Language">
@@ -25,7 +25,7 @@ import OrderedMultiSelectItem from "./OrderedMultiSelectItem.astro";
         <div class="mt-6">
             <label for="output-url" class="text-md font-bold">Your ICal Url</label>
             <div class="flex mt-2">
-                <div class="flex flex-1 outline-solid p-1">
+                <div class="flex flex-1 outline p-1">
                     <input id="output-url" readonly value="https://api.anime-calendar.com/v3/ical/myanimelist/"
                            class="flex-1 outline-none"/>
                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"
@@ -34,7 +34,7 @@ import OrderedMultiSelectItem from "./OrderedMultiSelectItem.astro";
                     </svg>
                 </div>
                 <button type="button" id="copy-output-url" title="Copy To Clipboard"
-                        class="ml-2 hover:bg-gray-200 p-1 outline-solid rounded-xs">
+                        class="ml-2 hover:bg-gray-200 p-1 outline rounded-xs">
                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"
                          fill="#1f1f1f">
                         <path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/>
@@ -48,7 +48,7 @@ import OrderedMultiSelectItem from "./OrderedMultiSelectItem.astro";
         <div class="flex justify-center">
             <span class="text-center font-bold text-md">Add To</span>
         </div>
-        <div class="flex flex-wrap justify-evenly mt-3 mb-3">
+        <div class="flex flex-wrap justify-evenly mt-3 gap-2">
             <div class="flex-1 text-center min-w-22">
                 <a href="https://support.apple.com/en-us/102301" target="_blank"
                    class="hover:bg-gray-200 p-1 rounded-xs">
